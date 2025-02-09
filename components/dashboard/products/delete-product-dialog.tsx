@@ -35,7 +35,7 @@ export function DeleteProductDialog({ product, onDelete }: DeleteProductDialogPr
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600">
+        <DropdownMenuItem onSelect={(e: { preventDefault: () => any }) => e.preventDefault()} className="text-red-600">
           Delete
         </DropdownMenuItem>
       </AlertDialogTrigger>

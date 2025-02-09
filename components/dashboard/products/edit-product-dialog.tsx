@@ -52,7 +52,7 @@ export function EditProductDialog({ product, onUpdate }: EditProductDialogProps)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Edit</DropdownMenuItem>
+        <DropdownMenuItem onSelect={(e: { preventDefault: () => any }) => e.preventDefault()}>Edit</DropdownMenuItem>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
