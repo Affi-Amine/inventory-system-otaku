@@ -1,59 +1,69 @@
-"use client"
+'use client'
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import type { Product } from "@prisma/client"
-import React from "react"
-import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "../../ui/alert-dialog"
-import { DropdownMenuItem } from "../../ui/dropdown-menu"
-
+import { deleteProduct } from "@/app/actions/products"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface DeleteProductDialogProps {
-  product: Product
-  onDelete: (product: Product) => void
+  productId: string
+  isOpen: boolean
+  onClose: () => void
+  onDelete: () => void
 }
 
-export function DeleteProductDialog({ product, onDelete }: DeleteProductDialogProps) {
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
+export function DeleteProductDialog({
+  productId,
+  isOpen,
+  onClose,
+  onDelete,
+}: DeleteProductDialogProps) {
+  const [isDeleting, setIsDeleting] = useState(false)
 
   async function handleDelete() {
-    setLoading(true)
-
-    const response = await fetch(`/api/products/${product.id}`, {
-      method: "DELETE",
-    })
-
-    if (response.ok) {
-      onDelete(product)
-      router.refresh()
+    setIsDeleting(true)
+    try {
+      const result = await deleteProduct(productId)
+      if (result.success) {
+        onDelete()
+      } else {
+        console.error('Failed to delete product:', result.error)
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error)
+    } finally {
+      setIsDeleting(false)
+      onClose()
     }
-
-    setLoading(false)
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e: { preventDefault: () => any }) => e.preventDefault()} className="text-red-600">
-          Delete
-        </DropdownMenuItem>
-      </AlertDialogTrigger>
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Product</AlertDialogTitle>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete {product.name}? This action cannot be undone.
+            This action cannot be undone. This will permanently delete the product.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700" disabled={loading}>
-            {loading ? "Deleting..." : "Delete"}
+          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   )
 }
-

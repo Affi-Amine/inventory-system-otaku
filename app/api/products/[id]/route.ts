@@ -1,11 +1,20 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+type RouteContext = {
+  params: {
+    id: string
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: RouteContext
+) {
   try {
     const json = await request.json()
     const product = await prisma.product.update({
-      where: { id: params.id },
+      where: { id: String(params.id) },
       data: json,
     })
     return NextResponse.json(product)
@@ -14,14 +23,28 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: RouteContext
+) {
   try {
-    await prisma.product.delete({
-      where: { id: params.id },
+    const product = await prisma.product.delete({
+      where: { id: String(params.id) },
     })
-    return NextResponse.json({ success: true })
+
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true, product })
   } catch (error) {
-    return NextResponse.json({ error: "Failed to delete product" }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+    return NextResponse.json(
+      {
+        error: "Failed to delete product",
+        details: errorMessage,
+      },
+      { status: 500 }
+    )
   }
 }
-
