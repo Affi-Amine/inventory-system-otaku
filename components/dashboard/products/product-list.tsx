@@ -2,9 +2,6 @@
 
 import { useState } from "react"
 import type { Product } from "@prisma/client"
-
-
-import React from "react"
 import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table } from "../../ui/table"
 import { Search, MoreHorizontal } from "lucide-react"
 import { DeleteProductDialog } from "./delete-product-dialog"
@@ -12,6 +9,7 @@ import { EditProductDialog } from "./edit-product-dialog"
 import { Input } from "../../ui/input"
 import { Button } from "../../ui/button"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel } from "../../ui/dropdown-menu"
+import { useRouter } from "next/navigation"
 
 interface ProductListProps {
   products: Product[]
@@ -20,12 +18,22 @@ interface ProductListProps {
 export function ProductList({ products: initialProducts }: ProductListProps) {
   const [products, setProducts] = useState(initialProducts)
   const [search, setSearch] = useState("")
+  const router = useRouter()
 
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(search.toLowerCase()) ||
       product.sku.toLowerCase().includes(search.toLowerCase()),
   )
+
+  const handleDelete = () => {
+    router.refresh() // Refresh the page to ensure server and client state are in sync
+  }
+
+  const handleUpdateSuccess = (updatedProduct: Product) => {
+    setProducts(products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)))
+    router.refresh() // Refresh the page to ensure server and client state are in sync
+  }
 
   return (
     <div className="space-y-4">
@@ -99,15 +107,11 @@ export function ProductList({ products: initialProducts }: ProductListProps) {
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <EditProductDialog
                         product={product}
-                        onUpdate={(updated) => {
-                          setProducts(products.map((p) => (p.id === updated.id ? updated : p)))
-                        }}
+                        onUpdate={handleUpdateSuccess}
                       />
                       <DeleteProductDialog
                         product={product}
-                        onDelete={(deleted) => {
-                          setProducts(products.filter((p) => p.id !== deleted.id))
-                        }}
+                        onDelete={handleDelete}
                       />
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -120,4 +124,3 @@ export function ProductList({ products: initialProducts }: ProductListProps) {
     </div>
   )
 }
-

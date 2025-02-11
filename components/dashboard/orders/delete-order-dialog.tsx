@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, type MouseEvent } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import type { Product } from "@prisma/client"
+import type { Order, Customer, Product, OrderItem } from "@prisma/client"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,43 +13,45 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
+} from "../../ui/alert-dialog"
+import { DropdownMenuItem } from "../../ui/dropdown-menu"
 import { Loader2 } from "lucide-react"
+import React from "react"
 
-interface DeleteProductDialogProps {
-  product: Product
-  onDelete: (product: Product) => void
+type OrderWithRelations = Order & {
+  customer: Customer
+  items: (OrderItem & {
+    product: Product
+  })[]
 }
 
-export function DeleteProductDialog({ product, onDelete }: DeleteProductDialogProps) {
+interface DeleteOrderDialogProps {
+  order: OrderWithRelations
+  onDelete: (order: OrderWithRelations) => void
+}
+
+export function DeleteOrderDialog({ order, onDelete }: DeleteOrderDialogProps) {
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const router = useRouter()
 
-  async function handleDelete(event: MouseEvent<HTMLButtonElement>) {
-    event.preventDefault()
+  async function handleDelete() {
     setLoading(true)
 
     try {
-      const response = await fetch(`/api/products/${product.id}`, {
+      const response = await fetch(`/api/orders/${order.id}`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Failed to delete product")
+        throw new Error("Failed to delete order")
       }
 
-      onDelete(product)
+      onDelete(order)
       setOpen(false)
       router.refresh()
     } catch (error) {
-      console.error("Error deleting product:", error)
-      // You might want to show an error message to the user here
+      console.error("Error deleting order:", error)
     } finally {
       setLoading(false)
     }
@@ -58,21 +60,15 @@ export function DeleteProductDialog({ product, onDelete }: DeleteProductDialogPr
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <DropdownMenuItem
-          onSelect={(e) => {
-            e.preventDefault()
-            setOpen(true)
-          }}
-          className="text-red-600"
-        >
+        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600">
           Delete
         </DropdownMenuItem>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Product</AlertDialogTitle>
+          <AlertDialogTitle>Delete Order</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete {product.name}? This action cannot be undone.
+            Are you sure you want to delete order #{order.id.slice(-6)}? This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

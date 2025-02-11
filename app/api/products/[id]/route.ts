@@ -1,20 +1,15 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 
-type RouteContext = {
-  params: {
-    id: string
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+  if (!params?.id) {
+    return NextResponse.json({ error: "Product ID is required" }, { status: 400 })
   }
-}
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: RouteContext
-) {
   try {
     const json = await request.json()
     const product = await prisma.product.update({
-      where: { id: String(params.id) },
+      where: { id: params.id },
       data: json,
     })
     return NextResponse.json(product)
@@ -23,13 +18,14 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteContext
-) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  if (!params?.id) {
+    return NextResponse.json({ error: "Product ID is required" }, { status: 400 })
+  }
+
   try {
     const product = await prisma.product.delete({
-      where: { id: String(params.id) },
+      where: { id: params.id },
     })
 
     if (!product) {
@@ -44,7 +40,8 @@ export async function DELETE(
         error: "Failed to delete product",
         details: errorMessage,
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
+
