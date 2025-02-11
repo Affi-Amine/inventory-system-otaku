@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server"
-import { prisma } from "../../../../lib/db"
+import { prisma } from "@/lib/db"
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
-  if (!params?.id) {
-    return NextResponse.json({ error: "Order ID is required" }, { status: 400 })
-  }
-
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await context.params
+    if (!id) {
+      return NextResponse.json({ error: "Order ID is required" }, { status: 400 })
+    }
+
     const json = await request.json()
     const order = await prisma.order.update({
-      where: { id: params.id },
+      where: { id },
       data: json,
       include: {
         customer: true,
@@ -27,15 +28,16 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  if (!params?.id) {
-    return NextResponse.json({ error: "Order ID is required" }, { status: 400 })
-  }
-
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await context.params
+    if (!id) {
+      return NextResponse.json({ error: "Order ID is required" }, { status: 400 })
+    }
+
     // First, get the order items to restore product stock
     const order = await prisma.order.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         items: true,
       },
@@ -59,12 +61,19 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     // Delete the order (this will cascade delete the order items)
     await prisma.order.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    return NextResponse.json({ error: "Failed to delete order" }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+    return NextResponse.json(
+      {
+        error: "Failed to delete order",
+        details: errorMessage,
+      },
+      { status: 500 },
+    )
   }
 }
 

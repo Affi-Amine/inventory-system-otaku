@@ -77,9 +77,8 @@ export function EditOrderDialog({ order, onUpdate }: EditOrderDialogProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="PROCESSING">Processing</SelectItem>
                 <SelectItem value="DELIVERED">Delivered</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                <SelectItem value="REFUNDED">Refunded</SelectItem>
               </SelectContent>
             </Select>
           </div>
