@@ -76,7 +76,7 @@ export function OrderList({ initialOrders }: OrderListProps) {
           <SelectContent>
             <SelectItem value="ALL">All Status</SelectItem>
             <SelectItem value="PENDING">Pending</SelectItem>
-            <SelectItem value="PROCESSING">Processing</SelectItem>
+            <SelectItem value="REFUNDED">Refunded</SelectItem>
             <SelectItem value="DELIVERED">Delivered</SelectItem>
           </SelectContent>
         </Select>
