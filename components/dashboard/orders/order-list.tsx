@@ -2,22 +2,21 @@
 
 import { useState } from "react"
 import type { Order, Customer, Product, OrderItem } from "@prisma/client"
-import { Table, TableBody, TableCell, TableHead, TableRow } from "../../ui/table"
-import { Input } from "../../ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "../../ui/dropdown-menu"
-import { Button } from "../../ui/button"
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 import { Search, MoreHorizontal, Filter } from "lucide-react"
 import { format } from "date-fns"
 import { EditOrderDialog } from "./edit-order-dialog"
 import { DeleteOrderDialog } from "./delete-order-dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { OrderStatus } from "./types"
-import React from "react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { OrderStatus } from "./types"
 
 type OrderWithRelations = Order & {
   customer: Customer
@@ -76,15 +75,16 @@ export function OrderList({ initialOrders }: OrderListProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">All Status</SelectItem>
-            <SelectItem value={OrderStatus.PENDING}>Pending</SelectItem>
-            <SelectItem value={OrderStatus.DELIVERED}>Delivered</SelectItem>
+            <SelectItem value="PENDING">Pending</SelectItem>
+            <SelectItem value="PROCESSING">Processing</SelectItem>
+            <SelectItem value="DELIVERED">Delivered</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="rounded-md border">
         <Table>
-          <TableHead>
+          <TableHeader>
             <TableRow>
               <TableHead>Order ID</TableHead>
               <TableHead>Customer</TableHead>
@@ -94,7 +94,7 @@ export function OrderList({ initialOrders }: OrderListProps) {
               <TableHead>Date</TableHead>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
-          </TableHead>
+          </TableHeader>
           <TableBody>
             {filteredOrders.map((order) => (
               <TableRow key={order.id}>
@@ -113,7 +113,7 @@ export function OrderList({ initialOrders }: OrderListProps) {
                 <TableCell>
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                      order.status,
+                      order.status as OrderStatus,
                     )}`}
                   >
                     {order.status.toLowerCase()}
