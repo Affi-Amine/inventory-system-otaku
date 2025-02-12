@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Customer } from "@prisma/client"
+import type { Customer } from "@prisma/client"
 import { format } from "date-fns"
 import { Search, MoreHorizontal } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
