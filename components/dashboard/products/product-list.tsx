@@ -2,14 +2,19 @@
 
 import { useState } from "react"
 import type { Product } from "@prisma/client"
-import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table } from "../../ui/table"
-import { Search, MoreHorizontal } from "lucide-react"
-import { DeleteProductDialog } from "./delete-product-dialog"
+import { Table, TableBody, TableCell, TableHead, TableRow, TableHeader } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { MoreHorizontal, Search } from "lucide-react"
 import { EditProductDialog } from "./edit-product-dialog"
-import { Input } from "../../ui/input"
-import { Button } from "../../ui/button"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel } from "../../ui/dropdown-menu"
-import { useRouter } from "next/navigation"
+import { DeleteProductDialog } from "./delete-product-dialog"
+import { formatCurrency } from "@/lib/format"
 
 interface ProductListProps {
   products: Product[]
@@ -18,22 +23,12 @@ interface ProductListProps {
 export function ProductList({ products: initialProducts }: ProductListProps) {
   const [products, setProducts] = useState(initialProducts)
   const [search, setSearch] = useState("")
-  const router = useRouter()
 
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(search.toLowerCase()) ||
       product.sku.toLowerCase().includes(search.toLowerCase()),
   )
-
-  const handleDelete = () => {
-    router.refresh() // Refresh the page to ensure server and client state are in sync
-  }
-
-  const handleUpdateSuccess = (updatedProduct: Product) => {
-    setProducts(products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)))
-    router.refresh() // Refresh the page to ensure server and client state are in sync
-  }
 
   return (
     <div className="space-y-4">
@@ -84,7 +79,7 @@ export function ProductList({ products: initialProducts }: ProductListProps) {
                   </div>
                 </TableCell>
                 <TableCell>{product.sku}</TableCell>
-                <TableCell>${product.price.toFixed(2)}</TableCell>
+                <TableCell>{formatCurrency(product.price)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <div
@@ -107,11 +102,15 @@ export function ProductList({ products: initialProducts }: ProductListProps) {
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <EditProductDialog
                         product={product}
-                        onUpdate={handleUpdateSuccess}
+                        onUpdate={(updated) => {
+                          setProducts(products.map((p) => (p.id === updated.id ? updated : p)))
+                        }}
                       />
                       <DeleteProductDialog
                         product={product}
-                        onDelete={handleDelete}
+                        onDelete={(deleted) => {
+                          setProducts(products.filter((p) => p.id !== deleted.id))
+                        }}
                       />
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -124,3 +123,4 @@ export function ProductList({ products: initialProducts }: ProductListProps) {
     </div>
   )
 }
+

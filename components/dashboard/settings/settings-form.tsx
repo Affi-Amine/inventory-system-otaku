@@ -13,7 +13,6 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useTheme } from "@/components/theme-provider"
 
 const settingsFormSchema = z.object({
   theme: z.enum(["light", "dark", "system"]),
@@ -39,17 +38,11 @@ interface SettingsFormProps {
 export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const { setTheme } = useTheme()
 
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsFormSchema),
     defaultValues: initialSettings,
   })
-
-  useEffect(() => {
-    const currentTheme = form.watch("theme")
-    setTheme(currentTheme)
-  }, [form.watch("theme"), setTheme, form]) // Added 'form' to dependencies
 
   async function onSubmit(data: SettingsFormValues) {
     setIsLoading(true)
@@ -86,50 +79,6 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Display Settings</CardTitle>
-            <CardDescription>Customize your display preferences.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FormField
-              control={form.control}
-              name="theme"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Theme</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-1"
-                    >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="light" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Light</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="dark" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Dark</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="system" />
-                        </FormControl>
-                        <FormLabel className="font-normal">System</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>

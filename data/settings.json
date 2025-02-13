@@ -1,0 +1,8 @@
+{
+  "theme": "system",
+  "companyName": "otaku",
+  "currency": "TND",
+  "lowStockThreshold": 10,
+  "enableNotifications": true,
+  "backupFrequency": "weekly"
+}

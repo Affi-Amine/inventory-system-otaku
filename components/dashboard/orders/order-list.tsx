@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { Order, Customer, Product, OrderItem } from "@prisma/client"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHead, TableRow, TableHeader } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import { EditOrderDialog } from "./edit-order-dialog"
 import { DeleteOrderDialog } from "./delete-order-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { OrderStatus } from "./types"
+import { getSettings, type Settings } from "@/lib/settings"
 
 type OrderWithRelations = Order & {
   customer: Customer
@@ -33,6 +34,19 @@ export function OrderList({ initialOrders }: OrderListProps) {
   const [orders, setOrders] = useState(initialOrders)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "ALL">("ALL")
+  const [settings, setSettings] = useState<Settings | null>(null)
+
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const fetchedSettings = await getSettings()
+        setSettings(fetchedSettings)
+      } catch (error) {
+        console.error("Error fetching settings:", error)
+      }
+    }
+    fetchSettings()
+  }, [])
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -56,6 +70,13 @@ export function OrderList({ initialOrders }: OrderListProps) {
     }
   }
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: settings?.currency || "TND",
+    }).format(amount)
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
@@ -76,7 +97,7 @@ export function OrderList({ initialOrders }: OrderListProps) {
           <SelectContent>
             <SelectItem value="ALL">All Status</SelectItem>
             <SelectItem value="PENDING">Pending</SelectItem>
-            <SelectItem value="REFUNDED">Refunded</SelectItem>
+            <SelectItem value="PROCESSING">Processing</SelectItem>
             <SelectItem value="DELIVERED">Delivered</SelectItem>
           </SelectContent>
         </Select>
@@ -109,7 +130,7 @@ export function OrderList({ initialOrders }: OrderListProps) {
                     ))}
                   </div>
                 </TableCell>
-                <TableCell>${order.total.toFixed(2)}</TableCell>
+                <TableCell>{formatCurrency(order.total)}</TableCell>
                 <TableCell>
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(

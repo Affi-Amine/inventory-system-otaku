@@ -1,55 +1,22 @@
-import { prisma } from '@/lib/db'
-import { Card } from '@/components/ui/card'
-import { DollarSign, Users, Package, TrendingUp } from 'lucide-react'
-import { OverviewChart } from '@/components/dashboard/overview-chart'
-import { StockStatus } from '@/components/dashboard/stock-status'
-import { RecentOrders } from '@/components/dashboard/recent-orders'
+import { prisma } from "@/lib/db"
+import { formatCurrency } from "@/lib/format"
+import { Card } from "@/components/ui/card"
+import { DollarSign, Users, Package, TrendingUp } from "lucide-react"
+import { OverviewChart } from "@/components/dashboard/overview-chart"
+import { RecentOrders } from "@/components/dashboard/recent-orders"
+import { StockStatus } from "@/components/dashboard/stock-status"
 
-async function getOverviewData() {
-  // Get monthly sales data
-  const monthlyData = await prisma.$queryRaw<{ month: number, total: number }[]>`
-    SELECT 
-      EXTRACT(MONTH FROM "createdAt")::integer as month,
-      SUM(total) as total
-    FROM "Order"
-    WHERE 
-      "createdAt" >= DATE_TRUNC('year', CURRENT_DATE)
-    GROUP BY month
-    ORDER BY month
-  `
-
-  // Get stock status
-  const products = await prisma.product.findMany()
-  const stockStatus = {
-    inStock: products.filter(p => p.stock > 10).length,
-    lowStock: products.filter(p => p.stock > 0 && p.stock <= 10).length,
-    outOfStock: products.filter(p => p.stock === 0).length,
-  }
-
-  // Get overview stats
+export default async function DashboardPage() {
   const totalProducts = await prisma.product.count()
   const totalCustomers = await prisma.customer.count()
   const totalOrders = await prisma.order.count()
   const totalRevenue = await prisma.order.aggregate({
     _sum: {
-      total: true
-    }
+      total: true,
+    },
   })
 
-  return {
-    monthlyData,
-    stockStatus,
-    stats: {
-      products: totalProducts,
-      customers: totalCustomers,
-      orders: totalOrders,
-      revenue: totalRevenue._sum.total || 0
-    }
-  }
-}
-
-export default async function DashboardPage() {
-  const { monthlyData, stockStatus, stats } = await getOverviewData()
+  const formattedRevenue = formatCurrency(totalRevenue._sum.total || 0)
 
   return (
     <div className="space-y-6">
@@ -60,11 +27,9 @@ export default async function DashboardPage() {
               <div className="p-3 bg-blue-100 rounded-full">
                 <DollarSign className="h-6 w-6 text-blue-600" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-gray-500">Total Revenue</p>
-                <h3 className="text-2xl font-semibold">
-                  ${stats.revenue.toFixed(2)}
-                </h3>
+                <h3 className="text-2xl font-semibold truncate">{formattedRevenue}</h3>
               </div>
             </div>
           </div>
@@ -77,7 +42,7 @@ export default async function DashboardPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total Customers</p>
-                <h3 className="text-2xl font-semibold">{stats.customers}</h3>
+                <h3 className="text-2xl font-semibold">{totalCustomers}</h3>
               </div>
             </div>
           </div>
@@ -90,7 +55,7 @@ export default async function DashboardPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total Products</p>
-                <h3 className="text-2xl font-semibold">{stats.products}</h3>
+                <h3 className="text-2xl font-semibold">{totalProducts}</h3>
               </div>
             </div>
           </div>
@@ -103,7 +68,7 @@ export default async function DashboardPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total Orders</p>
-                <h3 className="text-2xl font-semibold">{stats.orders}</h3>
+                <h3 className="text-2xl font-semibold">{totalOrders}</h3>
               </div>
             </div>
           </div>
@@ -114,13 +79,13 @@ export default async function DashboardPage() {
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4">Sales Overview</h3>
-            <OverviewChart data={monthlyData} />
+            <OverviewChart />
           </div>
         </Card>
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4">Stock Status</h3>
-            <StockStatus data={stockStatus} />
+            <StockStatus />
           </div>
         </Card>
       </div>
@@ -134,3 +99,4 @@ export default async function DashboardPage() {
     </div>
   )
 }
+
