@@ -29,34 +29,42 @@ export function DeleteProductDialog({ product, onDelete }: DeleteProductDialogPr
   const router = useRouter()
 
   async function handleDelete() {
-    setLoading(true)
-
+    setLoading(true);
+  
     try {
       const response = await fetch(`/api/products/${product.id}`, {
         method: "DELETE",
-      })
-
+      });
+  
+      const text = await response.text(); // Read response as text first
+      console.log("API Response:", text); // Log full response for debugging
+  
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to delete product")
+        try {
+          const errorData = JSON.parse(text); // Manually parse JSON
+          throw new Error(errorData.error || "Failed to delete product");
+        } catch (jsonError) {
+          throw new Error("Failed to delete product");
+        }
       }
-
-      onDelete(product)
-      setOpen(false)
+  
+      onDelete(product);
+      setOpen(false);
       toast({
         title: "Product deleted",
         description: `${product.name} has been successfully deleted.`,
-      })
-      router.refresh()
+      });
+  
+      router.refresh();
     } catch (error) {
-      console.error("Error deleting product:", error)
+      console.error("Error deleting product:", error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to delete product",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
