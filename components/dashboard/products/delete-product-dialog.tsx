@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type MouseEvent } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import type { Product } from "@prisma/client"
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Loader2 } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
 
 interface DeleteProductDialogProps {
   product: Product
@@ -27,29 +28,33 @@ export function DeleteProductDialog({ product, onDelete }: DeleteProductDialogPr
   const [open, setOpen] = useState(false)
   const router = useRouter()
 
-  async function handleDelete(event: MouseEvent<HTMLButtonElement>) {
-    event.preventDefault()
+  async function handleDelete() {
     setLoading(true)
 
     try {
       const response = await fetch(`/api/products/${product.id}`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Failed to delete product")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to delete product")
       }
 
       onDelete(product)
       setOpen(false)
+      toast({
+        title: "Product deleted",
+        description: `${product.name} has been successfully deleted.`,
+      })
       router.refresh()
     } catch (error) {
       console.error("Error deleting product:", error)
-      // You might want to show an error message to the user here
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete product",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }

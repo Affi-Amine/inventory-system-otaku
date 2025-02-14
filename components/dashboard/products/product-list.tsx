@@ -30,6 +30,14 @@ export function ProductList({ products: initialProducts }: ProductListProps) {
       product.sku.toLowerCase().includes(search.toLowerCase()),
   )
 
+  const handleDeleteProduct = (deletedProduct: Product) => {
+    setProducts(products.filter((p) => p.id !== deletedProduct.id))
+  }
+
+  const handleUpdateProduct = (updatedProduct: Product) => {
+    setProducts(products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)))
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -100,18 +108,8 @@ export function ProductList({ products: initialProducts }: ProductListProps) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <EditProductDialog
-                        product={product}
-                        onUpdate={(updated) => {
-                          setProducts(products.map((p) => (p.id === updated.id ? updated : p)))
-                        }}
-                      />
-                      <DeleteProductDialog
-                        product={product}
-                        onDelete={(deleted) => {
-                          setProducts(products.filter((p) => p.id !== deleted.id))
-                        }}
-                      />
+                      <EditProductDialog product={product} onUpdate={handleUpdateProduct} />
+                      <DeleteProductDialog product={product} onDelete={handleDeleteProduct} />
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
