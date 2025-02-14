@@ -25,7 +25,7 @@ export function ProductList({ products: initialProducts }: ProductListProps) {
   const [search, setSearch] = useState("")
 
   const filteredProducts = products
-  .filter((product) => !product.deleted) // Exclude archived products
+  .filter((product) => !product.deleted) 
   .filter(
     (product) =>
       product.name.toLowerCase().includes(search.toLowerCase()) ||

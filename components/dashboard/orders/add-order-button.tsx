@@ -1,48 +1,62 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import type { Customer, Product } from "@prisma/client"
-import { Plus, Loader2, X } from "lucide-react"
-import { Button } from "../../ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../ui/dialog"
-import { Input } from "../../ui/input"
-import { Label } from "../../ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import React from "react"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Customer, Product } from "@prisma/client";
+import { Plus, Loader2, X } from "lucide-react";
+import { Button } from "../../ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../ui/dialog";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+import React from "react";
 
 interface OrderItem {
-  productId: string
-  quantity: number
+  productId: string;
+  quantity: number;
 }
 
 interface AddOrderButtonProps {
-  customers: Customer[]
-  products: Product[]
+  customers: Customer[];
+  products: Product[];
 }
 
 export function AddOrderButton({ customers, products }: AddOrderButtonProps) {
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [customerId, setCustomerId] = useState("")
-  const [items, setItems] = useState<OrderItem[]>([{ productId: "", quantity: 1 }])
-  const router = useRouter()
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [customerId, setCustomerId] = useState("");
+  const [items, setItems] = useState<OrderItem[]>([{ productId: "", quantity: 1 }]);
+  const router = useRouter();
+
+  const availableProducts = products.filter((product) => !product.deleted);
 
   const addItem = () => {
-    setItems([...items, { productId: "", quantity: 1 }])
-  }
+    setItems([...items, { productId: "", quantity: 1 }]);
+  };
 
   const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index))
-  }
+    setItems(items.filter((_, i) => i !== index));
+  };
 
   const updateItem = (index: number, field: keyof OrderItem, value: string | number) => {
-    setItems(items.map((item, i) => (i === index ? { ...item, [field]: value } : item)))
-  }
+    setItems(items.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
+  };
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
+
+    // Validate stock and check for deleted products
+    const validItems = items.filter((item) => {
+      const product = availableProducts.find((p) => p.id === item.productId);
+      return product && item.quantity > 0 && item.quantity <= product.stock;
+    });
+
+    if (validItems.length !== items.length) {
+      alert("Some products are either deleted or the quantity exceeds available stock.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/orders", {
@@ -52,20 +66,21 @@ export function AddOrderButton({ customers, products }: AddOrderButtonProps) {
         },
         body: JSON.stringify({
           customerId,
-          items: items.filter((item) => item.productId && item.quantity > 0),
+          items: validItems,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to create order")
+        throw new Error("Failed to create order");
       }
 
-      setOpen(false)
-      router.refresh()
+      setOpen(false);
+      router.refresh();
     } catch (error) {
-      console.error("Error creating order:", error)
+      console.error("Error creating order:", error);
+      alert("Failed to create order. Please check the product stock and try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -109,9 +124,9 @@ export function AddOrderButton({ customers, products }: AddOrderButtonProps) {
                       <SelectValue placeholder="Select a product" />
                     </SelectTrigger>
                     <SelectContent>
-                      {products.map((product) => (
+                      {availableProducts.map((product) => (
                         <SelectItem key={product.id} value={product.id}>
-                          {product.name} (${product.price.toFixed(2)})
+                          {product.name} (${product.price.toFixed(2)}) - Stock: {product.stock}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -156,6 +171,5 @@ export function AddOrderButton({ customers, products }: AddOrderButtonProps) {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

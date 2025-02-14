@@ -7,7 +7,12 @@ import { RecentOrders } from "@/components/dashboard/recent-orders"
 import { StockStatus } from "@/components/dashboard/stock-status"
 
 export default async function DashboardPage() {
-  const totalProducts = await prisma.product.count()
+  
+  const totalProducts = await prisma.product.count({
+    where: {
+      deleted: false, // Only count products that are not deleted
+    },
+  });
   const totalCustomers = await prisma.customer.count()
   const totalOrders = await prisma.order.count()
   const totalRevenue = await prisma.order.aggregate({
@@ -15,6 +20,7 @@ export default async function DashboardPage() {
       total: true,
     },
   })
+
 
   const formattedRevenue = formatCurrency(totalRevenue._sum.total || 0)
 
