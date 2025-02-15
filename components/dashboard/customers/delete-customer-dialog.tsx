@@ -26,11 +26,13 @@ interface DeleteCustomerDialogProps {
 export function DeleteCustomerDialog({ customer, onDelete }: DeleteCustomerDialogProps) {
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
+  const [error, setError] = useState<string|null>(null)
   const router = useRouter()
 
   async function handleDelete(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault()
     setLoading(true)
+    setError(null)
 
     try {
       const response = await fetch(`/api/customers/${customer.id}`, {
@@ -38,7 +40,8 @@ export function DeleteCustomerDialog({ customer, onDelete }: DeleteCustomerDialo
       })
 
       if (!response.ok) {
-        throw new Error("Failed to delete customer")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to delete customer")
       }
 
       onDelete(customer)
@@ -46,6 +49,7 @@ export function DeleteCustomerDialog({ customer, onDelete }: DeleteCustomerDialo
       router.refresh()
     } catch (error) {
       console.error("Error deleting customer:", error)
+      setError(error instanceof Error ? error.message : "Failed to delete customer")
     } finally {
       setLoading(false)
     }
@@ -69,6 +73,7 @@ export function DeleteCustomerDialog({ customer, onDelete }: DeleteCustomerDialo
           <AlertDialogTitle>Delete Customer</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete {customer.name}? This action cannot be undone.
+            {error && <p className="text-red-500 mt-2">{error}</p>}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -88,4 +93,3 @@ export function DeleteCustomerDialog({ customer, onDelete }: DeleteCustomerDialo
     </AlertDialog>
   )
 }
-

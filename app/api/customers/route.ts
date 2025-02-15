@@ -5,17 +5,22 @@ export async function POST(request: Request) {
   try {
     const json = await request.json()
     const { name, email, phone } = json
+    
     const customer = await prisma.customer.create({
       data: {
         name,
         email,
         phone,
+        deleted: false // Explicitly set deleted status
       },
     })
+    
     return NextResponse.json(customer)
   } catch (error) {
     console.error("Error creating customer:", error)
-    return NextResponse.json({ error: "Failed to create customer" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to create customer" }, 
+      { status: 500 }
+    )
   }
 }
-

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { Customer } from "@prisma/client"
+import type { Customer, Order } from "@prisma/client"
 import { format } from "date-fns"
 import { Search, MoreHorizontal } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
@@ -19,21 +19,23 @@ import { DeleteCustomerDialog } from "./delete-customer-dialog"
 import React from "react"
 
 interface CustomerWithOrders extends Customer {
-  orders: Array<{ id: string }>
+  orders: Pick<Order, "id">[]
 }
 
 interface CustomerListProps {
-  initialCustomers: CustomerWithOrders[]
+  initialCustomers: (Customer & {
+    orders: Pick<Order, "id">[]
+  })[]
 }
 
 export function CustomerList({ initialCustomers }: CustomerListProps) {
-  const [customers, setCustomers] = useState(initialCustomers)
+  const [customers, setCustomers] = useState(initialCustomers.filter(c => !c.deleted))
   const [search, setSearch] = useState("")
 
   const filteredCustomers = customers.filter(
     (customer) =>
       customer.name.toLowerCase().includes(search.toLowerCase()) ||
-      customer.email.toLowerCase().includes(search.toLowerCase()),
+      customer.email.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -98,7 +100,9 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
                         customer={customer}
                         onUpdate={(updated) => {
                           setCustomers(
-                            customers.map((c) => (c.id === updated.id ? { ...updated, orders: c.orders } : c)),
+                            customers.map((c) => 
+                              c.id === updated.id ? { ...updated, orders: c.orders } : c
+                            ).filter(c => !c.deleted)
                           )
                         }}
                       />
@@ -119,4 +123,3 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
     </div>
   )
 }
-
