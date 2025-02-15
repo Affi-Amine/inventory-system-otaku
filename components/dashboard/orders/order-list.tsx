@@ -1,81 +1,82 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import type { Order, Customer, Product, OrderItem } from "@prisma/client"
-import { Table, TableBody, TableCell, TableHead, TableRow, TableHeader } from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
+import { useState, useEffect } from "react";
+import type { Order, Customer, Product, OrderItem } from "@prisma/client";
+import { Table, TableBody, TableCell, TableHead, TableRow, TableHeader } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { Search, MoreHorizontal, Filter } from "lucide-react"
-import { format } from "date-fns"
-import { EditOrderDialog } from "./edit-order-dialog"
-import { DeleteOrderDialog } from "./delete-order-dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { OrderStatus } from "./types"
-import { getSettings, type Settings } from "@/lib/settings"
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Search, MoreHorizontal, Filter } from "lucide-react";
+import { format } from "date-fns";
+import { EditOrderDialog } from "./edit-order-dialog";
+import { DeleteOrderDialog } from "./delete-order-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { OrderStatus } from "./types";
+import { getSettings, type Settings } from "@/lib/settings";
 
 type OrderWithRelations = Order & {
-  customer: Customer
+  customer: Customer;
   items: (OrderItem & {
-    product: Product
-  })[]
-}
+    product: Product;
+  })[];
+};
 
 interface OrderListProps {
-  initialOrders: OrderWithRelations[]
+  initialOrders: OrderWithRelations[];
 }
 
 export function OrderList({ initialOrders }: OrderListProps) {
-  const [orders, setOrders] = useState(initialOrders)
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | "ALL">("ALL")
-  const [settings, setSettings] = useState<Settings | null>(null)
+  const [orders, setOrders] = useState(initialOrders.filter(o => !o.deleted));
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | "ALL">("ALL");
+  const [settings, setSettings] = useState<Settings | null>(null);
 
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const fetchedSettings = await getSettings()
-        setSettings(fetchedSettings)
+        const fetchedSettings = await getSettings();
+        setSettings(fetchedSettings);
       } catch (error) {
-        console.error("Error fetching settings:", error)
+        console.error("Error fetching settings:", error);
       }
     }
-    fetchSettings()
-  }, [])
+    fetchSettings();
+  }, []);
 
   const filteredOrders = orders.filter((order) => {
+    if (order.deleted) return false;
     const matchesSearch =
       order.id.toLowerCase().includes(search.toLowerCase()) ||
       order.customer.name.toLowerCase().includes(search.toLowerCase()) ||
-      order.items.some((item) => item.product.name.toLowerCase().includes(search.toLowerCase()))
+      order.items.some((item) => item.product.name.toLowerCase().includes(search.toLowerCase()));
 
-    const matchesStatus = statusFilter === "ALL" || order.status === statusFilter
+    const matchesStatus = statusFilter === "ALL" || order.status === statusFilter;
 
-    return matchesSearch && matchesStatus
-  })
+    return matchesSearch && matchesStatus;
+  });
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
       case "PENDING":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       case "DELIVERED":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency: settings?.currency || "TND",
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   return (
     <div className="space-y-4">
@@ -97,7 +98,7 @@ export function OrderList({ initialOrders }: OrderListProps) {
           <SelectContent>
             <SelectItem value="ALL">All Status</SelectItem>
             <SelectItem value="PENDING">Pending</SelectItem>
-            <SelectItem value="PROCESSING">Processing</SelectItem>
+            <SelectItem value="REFUNDED">Refunded</SelectItem>
             <SelectItem value="DELIVERED">Delivered</SelectItem>
           </SelectContent>
         </Select>
@@ -153,13 +154,13 @@ export function OrderList({ initialOrders }: OrderListProps) {
                       <EditOrderDialog
                         order={order}
                         onUpdate={(updated) => {
-                          setOrders(orders.map((o) => (o.id === updated.id ? updated : o)))
+                          setOrders(orders.map((o) => (o.id === updated.id ? updated : o)));
                         }}
                       />
                       <DeleteOrderDialog
                         order={order}
                         onDelete={(deleted) => {
-                          setOrders(orders.filter((o) => o.id !== deleted.id))
+                          setOrders(orders.filter((o) => o.id !== deleted.id));
                         }}
                       />
                     </DropdownMenuContent>
@@ -171,6 +172,5 @@ export function OrderList({ initialOrders }: OrderListProps) {
         </Table>
       </div>
     </div>
-  )
+  );
 }
-

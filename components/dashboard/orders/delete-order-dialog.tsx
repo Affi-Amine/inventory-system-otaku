@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import type { Order, Customer, Product, OrderItem } from "@prisma/client"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Order, Customer, Product, OrderItem } from "@prisma/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,47 +13,48 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "../../ui/alert-dialog"
-import { DropdownMenuItem } from "../../ui/dropdown-menu"
-import { Loader2 } from "lucide-react"
-import React from "react"
+} from "../../ui/alert-dialog";
+import { DropdownMenuItem } from "../../ui/dropdown-menu";
+import { Loader2 } from "lucide-react";
+import React from "react";
 
 type OrderWithRelations = Order & {
-  customer: Customer
+  customer: Customer;
   items: (OrderItem & {
-    product: Product
-  })[]
-}
+    product: Product;
+  })[];
+};
 
 interface DeleteOrderDialogProps {
-  order: OrderWithRelations
-  onDelete: (order: OrderWithRelations) => void
+  order: OrderWithRelations;
+  onDelete: (order: OrderWithRelations) => void;
 }
 
 export function DeleteOrderDialog({ order, onDelete }: DeleteOrderDialogProps) {
-  const [loading, setLoading] = useState(false)
-  const [open, setOpen] = useState(false)
-  const router = useRouter()
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   async function handleDelete() {
-    setLoading(true)
+    setLoading(true);
 
     try {
       const response = await fetch(`/api/orders/${order.id}`, {
         method: "DELETE",
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to delete order")
+        throw new Error("Failed to delete order");
       }
 
-      onDelete(order)
-      setOpen(false)
-      router.refresh()
+      onDelete(order);
+      setOpen(false);
+      router.refresh();
     } catch (error) {
-      console.error("Error deleting order:", error)
+      console.error("Error deleting order:", error);
+      alert("Failed to delete order. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -68,7 +69,7 @@ export function DeleteOrderDialog({ order, onDelete }: DeleteOrderDialogProps) {
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Order</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete order #{order.id.slice(-6)}? This action cannot be undone.
+            Are you sure you want to delete order #{order.id.slice(-6)}? This will restore product stock.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -86,6 +87,5 @@ export function DeleteOrderDialog({ order, onDelete }: DeleteOrderDialogProps) {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }
-
