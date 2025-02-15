@@ -54,3 +54,45 @@ export async function DELETE(request: Request, context: { params: { id: string }
     );
   }
 }
+
+export async function PATCH(request: Request, context: { params: { id: string } }) {
+  try {
+    const { id } = context.params;
+    if (!id) {
+      return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
+    }
+
+    const json = await request.json();
+    
+    // Add validation for allowed status values
+    const validStatuses = ["PENDING", "DELIVERED", "REFUNDED"];
+    if (json.status && !validStatuses.includes(json.status)) {
+      return NextResponse.json({ error: "Invalid order status" }, { status: 400 });
+    }
+
+    // Update order with proper typing
+    const order = await prisma.order.update({
+      where: { id },
+      data: {
+        status: json.status,
+        updatedAt: new Date() // Ensure updatedAt is refreshed
+      },
+      include: {
+        customer: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(order);
+  } catch (error) {
+    console.error("Error updating order:", error);
+    return NextResponse.json(
+      { error: "Failed to update order", details: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
+  }
+}
