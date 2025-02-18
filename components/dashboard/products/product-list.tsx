@@ -1,44 +1,45 @@
-"use client"
+"use client"; // ✅ Add this directive to mark the component as a client component
 
-import { useState } from "react"
-import type { Product } from "@prisma/client"
-import { Table, TableBody, TableCell, TableHead, TableRow, TableHeader } from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
+import Image from "next/image"; // ✅ Import Next.js Image
+import { useState } from "react";
+import type { Product } from "@prisma/client";
+import { Table, TableBody, TableCell, TableHead, TableRow, TableHeader } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Search } from "lucide-react"
-import { EditProductDialog } from "./edit-product-dialog"
-import { DeleteProductDialog } from "./delete-product-dialog"
-import { formatCurrency } from "@/lib/format"
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal, Search } from "lucide-react";
+import { EditProductDialog } from "./edit-product-dialog";
+import { DeleteProductDialog } from "./delete-product-dialog";
+import { formatCurrency } from "@/lib/format";
 
 interface ProductListProps {
-  products: Product[]
+  products: Product[];
 }
 
 export function ProductList({ products: initialProducts }: ProductListProps) {
-  const [products, setProducts] = useState(initialProducts)
-  const [search, setSearch] = useState("")
+  const [products, setProducts] = useState(initialProducts);
+  const [search, setSearch] = useState("");
 
   const filteredProducts = products
-  .filter((product) => !product.deleted) 
-  .filter(
-    (product) =>
-      product.name.toLowerCase().includes(search.toLowerCase()) ||
-      product.sku.toLowerCase().includes(search.toLowerCase())
-  );
+    .filter((product) => !product.deleted)
+    .filter(
+      (product) =>
+        product.name.toLowerCase().includes(search.toLowerCase()) ||
+        product.sku.toLowerCase().includes(search.toLowerCase())
+    );
 
   const handleDeleteProduct = (deletedProduct: Product) => {
-    setProducts(products.filter((p) => p.id !== deletedProduct.id))
-  }
+    setProducts(products.filter((p) => p.id !== deletedProduct.id));
+  };
 
   const handleUpdateProduct = (updatedProduct: Product) => {
-    setProducts(products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)))
-  }
+    setProducts(products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)));
+  };
 
   return (
     <div className="space-y-4">
@@ -71,12 +72,14 @@ export function ProductList({ products: initialProducts }: ProductListProps) {
               <TableRow key={product.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
                       {product.imageUrl ? (
-                        <img
-                          src={product.imageUrl || "/placeholder.svg"}
+                        <Image
+                          src={product.imageUrl}
                           alt={product.name}
-                          className="h-full w-full object-cover rounded-lg"
+                          width={40} // ✅ Set explicit width
+                          height={40} // ✅ Set explicit height
+                          className="object-cover rounded-lg"
                         />
                       ) : (
                         <span className="text-gray-400 text-sm">No image</span>
@@ -121,6 +124,5 @@ export function ProductList({ products: initialProducts }: ProductListProps) {
         </Table>
       </div>
     </div>
-  )
+  );
 }
-

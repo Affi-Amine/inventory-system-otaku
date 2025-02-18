@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import type { Product } from "@prisma/client"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Product } from "@prisma/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,48 +13,40 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { Loader2 } from "lucide-react"
-import { toast } from "@/components/ui/use-toast"
+} from "@/components/ui/alert-dialog";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 interface DeleteProductDialogProps {
-  product: Product
-  onDelete: (product: Product) => void
+  product: Product;
+  onDelete: (product: Product) => void;
 }
 
 export function DeleteProductDialog({ product, onDelete }: DeleteProductDialogProps) {
-  const [loading, setLoading] = useState(false)
-  const [open, setOpen] = useState(false)
-  const router = useRouter()
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   async function handleDelete() {
     setLoading(true);
-  
+
     try {
       const response = await fetch(`/api/products/${product.id}`, {
         method: "DELETE",
       });
-  
-      const text = await response.text(); // Read response as text first
-      console.log("API Response:", text); // Log full response for debugging
-  
+
       if (!response.ok) {
-        try {
-          const errorData = JSON.parse(text); // Manually parse JSON
-          throw new Error(errorData.error || "Failed to delete product");
-        } catch (jsonError) {
-          throw new Error("Failed to delete product");
-        }
+        throw new Error("Failed to delete product");
       }
-  
+
       onDelete(product);
       setOpen(false);
       toast({
         title: "Product deleted",
         description: `${product.name} has been successfully deleted.`,
       });
-  
+
       router.refresh();
     } catch (error) {
       console.error("Error deleting product:", error);
@@ -73,8 +65,8 @@ export function DeleteProductDialog({ product, onDelete }: DeleteProductDialogPr
       <AlertDialogTrigger asChild>
         <DropdownMenuItem
           onSelect={(e) => {
-            e.preventDefault()
-            setOpen(true)
+            e.preventDefault();
+            setOpen(true);
           }}
           className="text-red-600"
         >
@@ -103,6 +95,5 @@ export function DeleteProductDialog({ product, onDelete }: DeleteProductDialogPr
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }
-

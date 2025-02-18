@@ -18,9 +18,6 @@ import { EditCustomerDialog } from "./edit-customer-dialog"
 import { DeleteCustomerDialog } from "./delete-customer-dialog"
 import React from "react"
 
-interface CustomerWithOrders extends Customer {
-  orders: Pick<Order, "id">[]
-}
 
 interface CustomerListProps {
   initialCustomers: (Customer & {

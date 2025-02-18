@@ -4,30 +4,27 @@ import { Prisma } from "@prisma/client"
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Record<string, string> }
 ) {
   try {
-    // Validate ID parameter
     if (!params?.id) {
       return NextResponse.json(
-        { error: "Customer ID is required" }, 
+        { error: "Customer ID is required" },
         { status: 400 }
       )
     }
 
-    // Check customer existence
     const existingCustomer = await prisma.customer.findUnique({
       where: { id: params.id }
     })
 
     if (!existingCustomer) {
       return NextResponse.json(
-        { error: "Customer not found" }, 
+        { error: "Customer not found" },
         { status: 404 }
       )
     }
 
-    // Check for existing orders
     const orders = await prisma.order.findMany({
       where: { customerId: params.id }
     })
@@ -39,7 +36,6 @@ export async function DELETE(
       )
     }
 
-    // Soft delete
     const updatedCustomer = await prisma.customer.update({
       where: { id: params.id },
       data: { deleted: true }
@@ -49,13 +45,10 @@ export async function DELETE(
       success: true,
       customer: updatedCustomer
     })
-
   } catch (error: unknown) {
-    // Handle error logging safely
     const errorMessage = error instanceof Error ? error.message : "Unknown error"
     console.error("Delete customer error:", errorMessage)
 
-    // Handle Prisma errors
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       return NextResponse.json(
         { error: "Database error", code: error.code },
@@ -70,7 +63,10 @@ export async function DELETE(
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(
+  request: Request,
+  { params }: { params: Record<string, string> }
+) {
   try {
     if (!params?.id) {
       return NextResponse.json({ error: "Customer ID is required" }, { status: 400 });
@@ -79,7 +75,6 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const json = await request.json();
     const { name, email, phone } = json;
 
-    // Basic validation
     if (!name || !email) {
       return NextResponse.json(
         { error: "Name and email are required" },
@@ -87,7 +82,6 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       );
     }
 
-    // Validate customer exists and isn't deleted
     const existingCustomer = await prisma.customer.findUnique({
       where: { id: params.id }
     });
@@ -96,7 +90,6 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });
     }
 
-    // Update customer
     const updatedCustomer = await prisma.customer.update({
       where: { id: params.id },
       data: {
@@ -107,20 +100,19 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     });
 
     return NextResponse.json(updatedCustomer);
-
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating customer:", error);
 
-    // Handle duplicate email error
-    if (error.code === 'P2002') {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return NextResponse.json(
         { error: "Email already exists" },
         { status: 409 }
       );
     }
 
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Failed to update customer", details: error.message },
+      { error: "Failed to update customer", details: errorMessage },
       { status: 500 }
     );
   }
